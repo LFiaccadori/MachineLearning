@@ -1,0 +1,61 @@
+import numpy as np
+import matplotlib.pyplot as plt
+%matplotlib widget
+from astropy.io import fits
+from astropy.wcs import WCS          
+
+# USI IL SITO MIKULSKI ARCHIVE PER SCARICARE I DATI (POI TI FACCIO VEDERE COME FARE)
+# SERVE FARE LA SEGUENTE COSA PER ALMENO 3 SETTORI DIVERSI
+
+sector80_tpf = 'MAST_2024-12-04T1047/tess2024170053053-s0080-0000000308172249-0275-s/tess2024170053053-s0080-0000000308172249-0275-s_tp.fits'
+sector80_lcf = 'MAST_2024-12-04T1047/tess2024170053053-s0080-0000000308172249-0275-s/tess2024170053053-s0080-0000000308172249-0275-s_lc.fits'
+
+fits.info(sector80_tpf)
+
+tpf_hdu = fits.open(sector80_tpf)
+tpf_hdu[0].header
+print(tpf_hdu[0].data) # <-- no data here, go to the next
+
+tpf_hdu[1].columns  # small image, 11 x 11 pixels
+
+# make some images
+
+tpf_data = tpf_hdu[1].data
+#print(tpf_data) #<--- impossibile da interpretare
+
+tpf_data['TIME'] #<--- ci da direttamente l'array che ci interessa
+
+sector80_bjdtdb = tpf_data['TIME'] + 2457000.0
+
+first_image = tpf_data['FLUX'][0]
+print(np.shape(tpf_data['FLUX']))
+print(np.shape(tpf_data['FLUX'][0]))
+
+wcs = WCS(tpf_hdu[2].header)
+#tpf_hdu[2].header
+
+fig = plt.figure(figsize=(4,4))
+fig.add_subplot(111, projection=wcs)
+plt.imshow(first_image, origin='lower', cmap=plt.colormaps['viridis'])
+plt.xlabel('RA', fontsize=14)
+plt.ylabel('DEC', fontsize=14)
+plt.grid(axis='both', color='white', ls='solid')
+plt.show()
+
+# APERTURE   <--- usa la TESS table su stem e vedi appunti per spiegazione
+ap_image = tpf_hdu[2].data
+print(ap_image)
+
+fig, ax = plt.subplots(figsize=(4,4))
+plt.imshow(ap_image, origin='lower')
+plt.show()
+
+np.binary_repr(139)  # attraverso la tabella otteniamo informazioni sull'apertura
+
+lcf_hdu = fits.open(sector80_lcf)
+fits.info(sector80_lcf)
+
+lcf_hdu[1].columns   
+# SAP: simple aperture photometry, as we did
+# PDCSAP: un modo di fare differential aperture photometry nel caso di un errore sistematico al telescopio, 
+# che influenza il target e tutto il resto, magari solo in un intorno di cielo
